@@ -1,0 +1,117 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="container-fluid">
+    <table class="table table-responsive table-striped" id="userTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Country</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/datatables.net-bs5/dataTables.bootstrap5.min.css" />
+}
+
+    @section Scripts {
+    <script src="~/lib/moment.js/moment.min.js"></script>
+    <script src="~/lib/datatables.net/jquery.dataTables.min.js"></script>
+    <script src="~/lib/datatables.net-bs5/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var isFetching = false;
+
+            jQuery.fn.dataTable.Api.register('processing()', function (show) {
+                return this.iterator('table', function (ctx) {
+                    ctx.oApi._fnProcessingDisplay(ctx, show);
+                });
+            });
+
+            var table = $("#userTable").DataTable({
+                paging: true,
+                processing: true, //dispaly info whiel fetching records from api
+                serverSide: true, //enables server side processing
+                responsive: true,
+                searchDelay: 1000, //triggers search function after this time delay
+                "sPaginationType": "full_numbers",
+                "language": {
+                    'loadingRecords': '&nbsp;', //only for client side processing
+                    "processing": '<div class="spinner-border m-5" role="status"> <span class="visually-hidden">Loading...</span></div>' //loader while processing
+                },
+                search: {
+                    return: false
+                },
+                searching: {
+                    regex: false
+                },
+                ajax: {
+                    url: "/Home/GetUsers",
+                    type: "POST",
+                    error: function (e) {
+                        console.error({ ...e.responseJSON });
+                        table.processing(false);
+                        isFetching = false;
+                    }
+                },
+                columns: [
+                    {
+                        data: "name",
+                        name: "Name",
+                    },
+                    {
+                        data: "username",
+                        name: "Username",
+                        orderable: false,
+                        searchable: false,
+                    },
+                    {
+                        data: "email",
+                        name: "Email",
+                    },
+                    {
+                        data: "country",
+                        name: "Country",
+                    },
+                    {
+                        data: "staus",
+                        name: "Status",
+                        render: function (data, type, row) {
+                            return data == "true" ? "Active" : "In-Active";
+                        }
+                    }
+                ]
+
+            });
+
+
+            $(".dataTables_filter input")
+                .unbind() // Unbind previous default bindings
+                .bind("keyup clear", function () {
+
+                    if (isFetching) {
+                        return;
+                    }
+
+                    isFetching = true;
+                    setTimeout(() => {
+                        console.log('clicked');
+                        table.search(this.value).draw();
+                        table.processing(true);
+                        isFetching = false;
+                    }, 1000)
+                });
+        });
+    </script>
+
+    }
+

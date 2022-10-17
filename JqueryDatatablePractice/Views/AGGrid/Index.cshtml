@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="container-fluid">
+    <div id="myGrid" class="ag-theme-alpine" style="height: 80vh"></div>
+</div>
+
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/datatables.net-bs5/dataTables.bootstrap5.min.css" />
+}
+
+    @section Scripts {
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <script type="text/javascript">
+
+
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+
+            const gridOptions = {
+                // each entry here represents one column
+                columnDefs: [
+                    { field: "name" },
+                    { field: "username" },
+                    { field: "email" },
+                    { field: "country" },
+                    { field: "status" },
+                ],
+                pagination: true,
+                paginationPageSize:20,
+                // default col def properties get applied to all columns
+                defaultColDef: { sortable: true, filter: true },
+
+                rowSelection: 'multiple', // allow rows to be selected
+                animateRows: true, // have rows animate to new positions when sorted
+
+                // example event handler
+                onCellClicked: params => {
+                    console.log('cell was clicked', params)
+                }
+            };
+
+            // get div to host the grid
+            const eGridDiv = document.getElementById("myGrid");
+            // new grid instance, passing in the hosting DIV and Grid Options
+            new agGrid.Grid(eGridDiv, gridOptions);
+
+            fetch("https://localhost:7070/ag-grid/get-users")
+                .then(response => response.json())
+                .then(data => {
+                    // register the datasource with the grid
+                    gridOptions.api.setRowData(data);
+                });
+        });
+    </script>
+
+    }
+
