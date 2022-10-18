@@ -2,7 +2,7 @@
 
 namespace JqueryDatatablePractice.Models.ViewModels;
 
-public class DtRequest
+public class DtRequestModel
 {
     [JsonPropertyName("draw")]
     public int Draw { get; set; }

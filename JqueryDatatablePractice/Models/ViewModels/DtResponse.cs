@@ -2,7 +2,7 @@
 
 namespace JqueryDatatablePractice.Models.ViewModels
 {
-    public class DtResponse<T>
+    public class DtResponseModel<T>
     {
         [JsonPropertyName("draw")]
         public int Draw { get; set; }

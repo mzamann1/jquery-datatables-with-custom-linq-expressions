@@ -26,9 +26,20 @@ namespace JqueryDatatablePractice.Services
             return query.OrderBy(name, orderByType);
         }
 
-        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequest dt, string value)
+        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequestModel dt, string value)
         {
             var searchableColumns = dt.Columns.Where(x => x.Searchable);
+           // foreach (var col in searchableColumns)
+           // {
+           //     var property = typeof(T).GetProperty(col.Name);
+
+           //     if (property != null)
+           //     {
+           //         if(property.PropertyType is int or )
+           //     }
+
+           // }
+           //;
 
             bool valueIsNumeric = decimal.TryParse(value, out decimal numericValue);
             if (valueIsNumeric)

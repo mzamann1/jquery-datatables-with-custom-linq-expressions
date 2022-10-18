@@ -26,7 +26,7 @@ namespace JqueryDatatablePractice.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetUsers([FromForm] DtRequest dt)
+        public async Task<IActionResult> GetUsers([FromForm] DtRequestModel dt)
         {
             var userQuery = await Task.Run(() => _userService.GetUsers().AsQueryable());
 
@@ -56,7 +56,7 @@ namespace JqueryDatatablePractice.Controllers
 
             var userList = userQuery.ToList();
 
-            var result = new DtResponse<User>()
+            var result = new DtResponseModel<User>()
             {
                 Draw = dt.Draw,
                 RecordsTotal = recordsTotal,
