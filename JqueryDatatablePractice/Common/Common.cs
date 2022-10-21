@@ -1,6 +1,6 @@
-﻿using JqueryDatatablePractice.Models;
+﻿using LINQExtensions.Models;
 
-namespace JqueryDatatablePractice.Common
+namespace LINQExtensions.Common
 {
     public static class CommonData
     {

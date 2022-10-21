@@ -1,5 +1,5 @@
-using JqueryDatatablePractice.Interfaces;
-using JqueryDatatablePractice.Services;
+using LINQExtensions.Interfaces;
+using LINQExtensions.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

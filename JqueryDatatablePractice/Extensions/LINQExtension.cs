@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using JqueryDatatablePractice.Constants;
-using JqueryDatatablePractice.Models.ViewModels;
+using LINQExtensions.Constants;
+using LINQExtensions.Extensions;
+using LINQExtensions.Helpers;
+using LINQExtensions.Models.ViewModels.JQueryDatatables;
 
-namespace JqueryDatatablePractice.Extensions
+namespace LINQExtensions.Extensions
 {
-    public static class LinqExtensions
+    public static class LINQExtension
     {
         public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, string key, int value)
         {
@@ -37,7 +39,7 @@ namespace JqueryDatatablePractice.Extensions
             *   Check if Key is null or empty space, or
             *   if someone has provided only the key 
             */
-            if (string.IsNullOrWhiteSpace(key) || (string.IsNullOrWhiteSpace(value) && methodType != MethodType.Empty))
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value) && methodType != MethodType.Empty)
             {
                 return source;
             }
@@ -58,7 +60,7 @@ namespace JqueryDatatablePractice.Extensions
             * Getting Type of the Key tName
             */
 
-            var propertyType = GetPropertyType(sourceType, key);
+            var propertyType = Helper.GetPropertyType(sourceType, key);
 
             /*
             * Now we need to create expression for that property
@@ -159,7 +161,7 @@ namespace JqueryDatatablePractice.Extensions
             * Getting Type of the Key tName
             */
 
-            var propertyType = GetPropertyType(sourceType, key);
+            var propertyType = Helper.GetPropertyType(sourceType, key);
 
             /*
             * Now we need to create expression for that property
@@ -172,7 +174,7 @@ namespace JqueryDatatablePractice.Extensions
             */
 
 
-            if (!IsNumericType(memberExp.Type) || !IsNumericValue(value))
+            if (!Helper.IsNumericType(memberExp.Type) || !Helper.IsNumericValue(value))
             {
                 return source;
             }
@@ -316,7 +318,7 @@ namespace JqueryDatatablePractice.Extensions
 
         public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equals)
         {
-            if ((value == null || !IsNumericValue(value) && condition != ConditionalOperatorType.Empty))
+            if (value == null || !Helper.IsNumericValue(value) && condition != ConditionalOperatorType.Empty)
             {
                 return source;
             }
@@ -330,15 +332,17 @@ namespace JqueryDatatablePractice.Extensions
                 prop1.PropertyType,
                 prop1.Name
             });
+
+
             foreach (var property in properties)
             {
-                if (!IsNumericType(property.PropertyType))
+                if (!Helper.IsNumericType(property.PropertyType))
                 {
                     continue;
                 }
 
                 var propertyExp = Expression.PropertyOrField(parameterExp, property.Name);
-                var constValueExp = Expression.Convert(Expression.Constant(GetMaxValueIfOutOfRange(value, property.PropertyType)), property.PropertyType);
+                var constValueExp = Expression.Convert(Expression.Constant(Helper.GetMaxValueIfOutOfRange(value, property.PropertyType)), property.PropertyType);
                 switch (condition)
                 {
                     case ConditionalOperatorType.Empty:
@@ -389,6 +393,73 @@ namespace JqueryDatatablePractice.Extensions
             var lambda = Expression.Lambda(resultExp, false, parameterExp);
             var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
             return source.Provider.CreateQuery<TSource>(whereExpression);
+        }
+
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, DtRequestModel inParam)
+        {
+
+            if (string.IsNullOrWhiteSpace(inParam.Search.Value) && inParam.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)))
+            {
+                return source;
+            }
+
+            var searchableCols = inParam.Columns.Where(x => x.Searchable).ToList();
+            int searchCount = searchableCols.Count();
+
+            var sourceType = typeof(TSource);
+
+            var properties = sourceType.GetProperties().Join(searchableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+            {
+                prop1.PropertyType,
+                prop1.Name,
+                prop2.Search.Value
+            }).ToList();
+
+
+            if (searchCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
+            {
+                foreach (var prop in properties)
+                {
+                    if (Helper.IsNumericType(prop.PropertyType))
+                    {
+                        bool valueIsNumeric = decimal.TryParse(prop.Value, out decimal numericValue);
+                        if (valueIsNumeric)
+                        {
+                            source = source.Where(prop.Name, numericValue);
+
+                        }
+                    }
+                    else
+                    {
+                        source = source.Where(prop.Name, prop.Value, MethodType.Contains);
+                    }
+
+                }
+
+            }
+
+
+            if (searchCount > 0 && !string.IsNullOrWhiteSpace(inParam.Search.Value))
+            {
+
+                foreach (var prop in properties)
+                {
+                    if (Helper.IsNumericType(prop.PropertyType))
+                    {
+                        bool valueIsNumeric = decimal.TryParse(inParam.Search.Value, out decimal numericValue);
+                        if (valueIsNumeric)
+                        {
+                            source = source.Where(searchableCols, numericValue);
+                        }
+                    }
+                    else
+                    {
+                        source = source.Where(searchableCols, inParam.Search.Value, MethodType.Contains);
+                    }
+
+                };
+            }
+            return source;
         }
 
 
@@ -442,60 +513,5 @@ namespace JqueryDatatablePractice.Extensions
                 return source;
             }
         }
-
-        private static Type GetPropertyType(Type type, string propName)
-        {
-            var property = type.GetProperty(propName);
-
-            if (property == null)
-            {
-                return default;
-            }
-
-            return property.PropertyType;
-        }
-
-        private static bool IsNumericType(Type type)
-        {
-            HashSet<Type> numericTypes = new() { typeof(int), typeof(double), typeof(decimal), typeof(long), typeof(short), typeof(sbyte), typeof(byte), typeof(ulong), typeof(ushort), typeof(uint), typeof(float) };
-            return numericTypes.Contains(type) || numericTypes.Contains(Nullable.GetUnderlyingType(type));
-        }
-
-        private static bool IsNumericValue(object value)
-        {
-            var x = value;
-            return value is byte or short or int or long or sbyte or ushort or uint or ulong or decimal or double or float;
-        }
-
-        private static object GetMaxValueIfOutOfRange(object value, Type type)
-        {
-            if (!IsNumericValue(value) || !IsNumericType(type))
-            {
-                // no need to check in range if value or type is not numeric
-                return value;
-            }
-
-            try
-            {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    type = type.GenericTypeArguments[0];
-                }
-
-                dynamic currentValue = value;
-                dynamic maxValue = (type.GetField("MaxValue", BindingFlags.Public | BindingFlags.Static)).GetValue(null);
-                if (currentValue > maxValue)
-                {
-                    return (ValueType)maxValue;
-                }
-
-                return value;
-            }
-            catch (Exception)
-            {
-                return value;
-            }
-        }
-
     }
 }

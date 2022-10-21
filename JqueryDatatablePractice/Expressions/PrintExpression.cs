@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JqueryDatatablePractice.Expressions;
+namespace LINQExtensions.Expressions;
 
 public static class PrintExpression
 {

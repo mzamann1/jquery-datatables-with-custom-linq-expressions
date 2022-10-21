@@ -1,9 +1,9 @@
-﻿using JqueryDatatablePractice.Constants;
+﻿using LINQExtensions.Models.ViewModels.JQueryDatatables;
 
-namespace JqueryDatatablePractice.Interfaces
+namespace LINQExtensions.Interfaces
 {
     public interface IOrdering
     {
-        IQueryable<T> GetOrderedData<T>(IQueryable<T> query, string name, OrderByType orderByType);
+        IQueryable<T> GetOrderedData<T>(IQueryable<T> query, DtRequestModel dt);
     }
 }

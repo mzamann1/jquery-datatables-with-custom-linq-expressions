@@ -5,16 +5,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using JqueryDatatablePractice.Constants;
+using LINQExtensions.Constants;
 
-namespace JqueryDatatablePractice.Expressions;
+namespace LINQExtensions.Expressions;
 
 public static class ArithmeticOperationExpression
 {
     public static int ApplyArithmeticOperation(int a, int b, ArithmeticOperationType op = ArithmeticOperationType.Sum)
     {
         //defining expression
-        
+
         ParameterExpression param1 = Expression.Parameter(typeof(int));
         ParameterExpression param2 = Expression.Parameter(typeof(int));
 

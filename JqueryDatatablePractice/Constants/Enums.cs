@@ -1,5 +1,4 @@
-
-namespace JqueryDatatablePractice.Constants;
+namespace LINQExtensions.Constants;
 
 public enum MethodType
 {

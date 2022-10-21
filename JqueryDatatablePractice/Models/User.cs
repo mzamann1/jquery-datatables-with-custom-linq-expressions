@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace JqueryDatatablePractice.Models;
+namespace LINQExtensions.Models;
 
 public class User
 {

@@ -1,9 +1,9 @@
-﻿using JqueryDatatablePractice.Models.ViewModels;
+﻿using LINQExtensions.Models.ViewModels.JQueryDatatables;
 
-namespace JqueryDatatablePractice.Interfaces
+namespace LINQExtensions.Interfaces
 {
     public interface IFiltering
     {
-        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequestModel dt, string value);
+        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequestModel dt);
     }
 }

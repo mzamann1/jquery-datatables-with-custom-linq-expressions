@@ -1,10 +1,9 @@
-﻿using JqueryDatatablePractice.Interfaces;
-using JqueryDatatablePractice.Models.ViewModels;
+﻿using JqueryDatatablePractice.Models.ViewModels;
 using JqueryDatatablePractice.Models;
-using JqueryDatatablePractice.Services;
 using Microsoft.AspNetCore.Mvc;
+using LINQExtensions.Interfaces;
 
-namespace JqueryDatatablePractice.Controllers;
+namespace LINQExtensions.Controllers;
 
 [Route("ag-grid")]
 public class AGGridController : Controller
@@ -21,7 +20,7 @@ public class AGGridController : Controller
         return View();
     }
 
-    [HttpGet,Route("get-users")]
+    [HttpGet, Route("get-users")]
     public async Task<IActionResult> FetchUsers()
     {
         var userQuery = await Task.Run(() => _agGridService.GetUsers().AsQueryable());

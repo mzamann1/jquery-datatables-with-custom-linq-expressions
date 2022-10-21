@@ -1,12 +1,12 @@
-﻿using JqueryDatatablePractice.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Net;
-using JqueryDatatablePractice.Constants;
-using JqueryDatatablePractice.Interfaces;
-using JqueryDatatablePractice.Models.ViewModels;
+using LINQExtensions.Models.ViewModels;
+using LINQExtensions.Models;
+using LINQExtensions.Interfaces;
+using LINQExtensions.Models.ViewModels.JQueryDatatables;
 
-namespace JqueryDatatablePractice.Controllers
+namespace LINQExtensions.Controllers
 {
     public class HomeController : Controller
     {
@@ -37,21 +37,15 @@ namespace JqueryDatatablePractice.Controllers
 
             int recordsTotal = userQuery.Count();
 
-            if (!string.IsNullOrWhiteSpace(dt.Search.Value))
-            {
-                userQuery = _userService.GetFilteredData(userQuery, dt, dt.Search.Value);
-            }
+            userQuery = _userService.GetFilteredData(userQuery, dt);
+
 
             int filteredRecords = userQuery.Count();
 
+            userQuery = _userService.GetOrderedData(userQuery, dt);
 
-            if (dt.Order.Length > 0)
-            {
-                userQuery = _userService.GetOrderedData(userQuery, dt.Columns[dt.Order[0].Column].Name,
-                    dt.Order[0].Dir == "asc" ? OrderByType.Ascending : OrderByType.Descending);
-            }
 
-            userQuery = _userService.GetPaginatedData(userQuery, dt.Start, dt.Length);
+            userQuery = _userService.GetPaginatedData(userQuery, dt);
 
 
             var userList = userQuery.ToList();

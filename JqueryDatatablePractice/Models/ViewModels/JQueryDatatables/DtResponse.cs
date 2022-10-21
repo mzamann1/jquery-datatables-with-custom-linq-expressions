@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace JqueryDatatablePractice.Models.ViewModels
+namespace LINQExtensions.Models.ViewModels.JQueryDatatables
 {
     public class DtResponseModel<T>
     {

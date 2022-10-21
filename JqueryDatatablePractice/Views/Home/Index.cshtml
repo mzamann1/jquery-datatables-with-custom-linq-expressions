@@ -1,20 +1,49 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-<div class="container-fluid">
-    <table class="table table-responsive table-striped" id="userTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Country</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-lg-12 col-md-12 col-sm-8">
+            <div>
+                <form id="userFilterForm" autocomplete="off" method="POST" class="form-floating">
+                    <div class="row mb-3">
+                        <div class="col-xl-3 col-lg-4 col-md-4 col-sm-12 mb-sm-2 mb-md-3 mb-3">
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Name" />
+                        </div>
+                        <div class="col-xl-3 col-lg-4  col-md-4 col-sm-12 mb-sm-2 mb-md-3 mb-3">
+                            <input type="text" class="form-control" id="email" name="email" placeholder="Email" />
+                        </div>
+                        <div class="col-xl-3 col-lg-4  col-md-4 col-sm-12 mb-sm-2 mb-md-3 mb-3">
+                            <input type="text" class="form-control" id="country" name="country" placeholder="Country" />
+                        </div>
+                        <div class="col-xl-3 col-lg-6 col-md-8 col-sm-12">
+                            <button type="submit" class="btn btn-success mx-1">Apply Filters</button>
+                            <button type="button" class="btn btn-primary mx-1" id="clearFilter">Clear Filters</button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-lg-12 col-sm-12 table-responsive">
+            <table class="table table-striped display responsive nowrap" id="userTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Country</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
 </div>
 
 
@@ -39,6 +68,7 @@
 
             var table = $("#userTable").DataTable({
                 paging: true,
+                responsive: true,
                 processing: true, //dispaly info whiel fetching records from api
                 serverSide: true, //enables server side processing
                 searchDelay: 1000, //triggers search function after this time delay
@@ -81,16 +111,66 @@
                         name: "Country",
                     },
                     {
-                        data: "staus",
+                        data: "status",
                         name: "Status",
-                        render: function (data, type, row) {
-                            return data == "true" ? "Active" : "In-Active";
-                        }
+
                     }
                 ]
+            });
+
+            var form = $("#userFilterForm");
+
+
+            $('#userFilterForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var searchValue = $('#name').val();
+                if (!!searchValue && table.columns(0).search() != searchValue) {
+                    table.columns(0).search(searchValue).draw();
+                } else {
+                    table.columns(0).search('').draw();
+                }
+
+                var searchEmail = $('#email').val();
+                if (!!searchEmail && table.columns(2).search() != searchEmail) {
+                    table.columns(2).search(searchEmail).draw();
+                } else {
+                    table.columns(2).search('').draw();
+                }
+
+                var searchCountry = $('#country').val();
+                if (!!searchCountry && table.columns(3).search() != searchCountry) {
+                    table.columns(3).search(searchCountry).draw();
+                } else {
+                    table.columns(3).search('').draw();
+                }
+            });
+
+
+            $('#clearFilter').on('click', function (e) {
+                e.preventDefault();
+
+                if (!checkEmptyFields()) {
+                    form[0].reset();
+                    table.columns(0).search('')
+                    table.columns(2).search('')
+                    table.columns(3).search('')
+                    table.draw();
+                }
+
 
             });
 
+            function checkEmptyFields() {
+                let isEmpty = true;
+                $("#userFilterForm input[type=text]").each(function () {
+                    if (this.value?.length > 0) {
+                        isEmpty = false;
+                        return;
+                    }
+                });
+                return isEmpty;
+            }
 
             $(".dataTables_filter input")
                 .unbind() // Unbind previous default bindings

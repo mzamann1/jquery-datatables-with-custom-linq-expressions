@@ -1,9 +1,8 @@
-﻿using JqueryDatatablePractice.Constants;
-using JqueryDatatablePractice.Models;
+﻿using LINQExtensions.Models;
 
-namespace JqueryDatatablePractice.Interfaces
+namespace LINQExtensions.Interfaces
 {
-    public interface IUserService : IPagination, IOrdering,IFiltering
+    public interface IUserService : IPagination, IOrdering, IFiltering
     {
         List<User> GetUsers();
     }

@@ -1,10 +1,8 @@
-﻿using JqueryDatatablePractice.Common;
-using JqueryDatatablePractice.Constants;
-using JqueryDatatablePractice.Interfaces;
-using JqueryDatatablePractice.Models;
-using JqueryDatatablePractice.Models.ViewModels;
+﻿using LINQExtensions.Common;
+using LINQExtensions.Interfaces;
+using LINQExtensions.Models;
 
-namespace JqueryDatatablePractice.Services
+namespace LINQExtensions.Services
 {
     public class AGService : IAGGridService
     {

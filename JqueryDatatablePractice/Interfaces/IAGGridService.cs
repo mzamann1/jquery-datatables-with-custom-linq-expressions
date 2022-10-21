@@ -1,8 +1,8 @@
-﻿using JqueryDatatablePractice.Models;
+﻿using LINQExtensions.Models;
 
-namespace JqueryDatatablePractice.Interfaces
+namespace LINQExtensions.Interfaces
 {
-    public interface IAGGridService 
+    public interface IAGGridService
     {
         List<User> GetUsers();
     }
