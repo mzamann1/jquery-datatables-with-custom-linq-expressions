@@ -2,7 +2,7 @@
 
 namespace LINQExtensions.Models.ViewModels.JQueryDatatables;
 
-public class DtRequestModel
+public class JQueryDtRequest
 {
     [JsonPropertyName("draw")]
     public int Draw { get; set; }
@@ -14,16 +14,16 @@ public class DtRequestModel
     public int Length { get; set; }
 
     [JsonPropertyName("search")]
-    public DtSearch Search { get; set; }
+    public JQueryDtSearch Search { get; set; }
 
     [JsonPropertyName("order")]
-    public DtOrder[] Order { get; set; }
+    public JQueryDtOrder[] Order { get; set; }
 
     [JsonPropertyName("columns")]
-    public DtColumn[] Columns { get; set; }
+    public JQueryDtColumn [] Columns { get; set; }
 }
 
-public class DtOrder
+public class JQueryDtOrder
 {
     [JsonPropertyName("column")]
     public int Column { get; set; }
@@ -32,7 +32,7 @@ public class DtOrder
     public string Dir { get; set; }
 }
 
-public class DtColumn
+public class JQueryDtColumn
 {
     [JsonPropertyName("data")]
     public string Data { get; set; }
@@ -47,10 +47,10 @@ public class DtColumn
     public bool Orderable { get; set; }
 
     [JsonPropertyName("search")]
-    public DtSearch Search { get; set; }
+    public JQueryDtSearch Search { get; set; }
 }
 
-public class DtSearch
+public class JQueryDtSearch
 {
     [JsonPropertyName("value")]
     public string Value { get; set; }

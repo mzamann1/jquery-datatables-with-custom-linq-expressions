@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using LINQExtensions.Constants;
-using LINQExtensions.Extensions;
-using LINQExtensions.Helpers;
-using LINQExtensions.Models.ViewModels.JQueryDatatables;
+using Zaman.Library.LINQExtensions.Constants;
+using Zaman.Library.LINQExtensions.Extensions;
+using Zaman.Library.LINQExtensions.Helpers;
 
-namespace LINQExtensions.Extensions
+namespace Zaman.Library.LINQExtensions.Extensions
 {
     public static class LINQExtension
     {
@@ -72,7 +71,10 @@ namespace LINQExtensions.Extensions
             * Now we need to convert the provided value's datatype to the property type from which it is going to be matched.
             */
 
-            var convertedConstvalue = Expression.Convert(Expression.Constant(value), propertyType);
+            var toLowerExp = Expression.Call(memberExp,
+                typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes));
+
+            var convertedConstvalue = Expression.Convert(Expression.Constant(value.ToLower()), propertyType);
 
             Expression finalExp = default;
 
@@ -80,7 +82,7 @@ namespace LINQExtensions.Extensions
             {
 
                 case MethodType.Empty:
-                    finalExp = Expression.Call(typeof(string), nameof(string.IsNullOrWhiteSpace), null, memberExp);
+                    finalExp = Expression.Call(typeof(string), nameof(string.IsNullOrWhiteSpace), null, toLowerExp);
                     break;
 
                 case MethodType.StartsWith:
@@ -90,7 +92,7 @@ namespace LINQExtensions.Extensions
                     */
 
                     var startsWithInfo = typeof(string).GetMethod(nameof(string.StartsWith), new Type[] { typeof(string) });
-                    finalExp = Expression.Call(memberExp, startsWithInfo, convertedConstvalue);
+                    finalExp = Expression.Call(toLowerExp, startsWithInfo, convertedConstvalue);
                     break;
 
                 case MethodType.EndsWith:
@@ -100,7 +102,7 @@ namespace LINQExtensions.Extensions
                     */
 
                     var endsWithInfo = typeof(string).GetMethod(nameof(string.EndsWith), new Type[] { typeof(string) });
-                    finalExp = Expression.Call(memberExp, endsWithInfo, convertedConstvalue);
+                    finalExp = Expression.Call(toLowerExp, endsWithInfo, convertedConstvalue);
                     break;
 
                 case MethodType.Contains:
@@ -110,17 +112,17 @@ namespace LINQExtensions.Extensions
                     */
 
                     var containsInfo = typeof(string).GetMethod(nameof(string.Contains), new Type[] { typeof(string) });
-                    finalExp = Expression.Call(memberExp, containsInfo, convertedConstvalue);
+                    finalExp = Expression.Call(toLowerExp, containsInfo, convertedConstvalue);
                     break;
 
                 case MethodType.Equal:
 
-                    finalExp = Expression.Equal(memberExp, convertedConstvalue);
+                    finalExp = Expression.Equal(toLowerExp, convertedConstvalue);
                     break;
 
                 case MethodType.NotEqual:
 
-                    finalExp = Expression.NotEqual(memberExp, convertedConstvalue);
+                    finalExp = Expression.NotEqual(toLowerExp, convertedConstvalue);
                     break;
 
                 default:
@@ -230,7 +232,180 @@ namespace LINQExtensions.Extensions
         }
 
 
-        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, string value, MethodType methodType = MethodType.Equal)
+        //public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, string value, MethodType methodType = MethodType.Equal)
+        //{
+        //    if (string.IsNullOrEmpty(value) && methodType != MethodType.Empty)
+        //    {
+        //        return source;
+        //    }
+
+        //    var containsMethodInfo = typeof(string).GetMethod(nameof(string.Contains), new Type[] { typeof(string) });
+        //    var endsWithMethodInfo = typeof(string).GetMethod(nameof(string.EndsWith), new Type[] { typeof(string) });
+        //    var toLowerMethodInfo = typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes);
+        //    var startsWithMethodInfo = typeof(string).GetMethod(nameof(string.StartsWith), new Type[] { typeof(string) });
+        //    var trimMethodInfo = typeof(string).GetMethod(nameof(string.Trim), Type.EmptyTypes);
+
+        //    Type entityType = typeof(TSource);
+        //    var parameterExp = Expression.Parameter(entityType, "x");
+        //    var expressions = new List<Expression>();
+
+
+        //    var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+        //    {
+        //        prop1.PropertyType,
+        //        prop1.Name
+        //    });
+
+
+
+        //    foreach (var property in properties)
+        //    {
+        //        if (!property.PropertyType.Equals(typeof(string)))
+        //        {
+        //            continue;
+        //        }
+
+        //        var propertyExp = Expression.PropertyOrField(parameterExp, property.Name);
+        //        var constValueExp = Expression.Convert(Expression.Constant(value.ToLower()), property.PropertyType);
+
+        //        var toLowerExp = Expression.Call(propertyExp,
+        //            toLowerMethodInfo);
+
+        //        switch (methodType)
+        //        {
+        //            case MethodType.Empty:
+        //                // Translate to Expression
+        //                // x.Property == null || x.Property.Trim() == string.Empty
+        //                var constNullExp = Expression.Convert(Expression.Constant(null), property.PropertyType);
+        //                var constEmptyExp = Expression.Convert(Expression.Constant(string.Empty), property.PropertyType);
+        //                var equalToNullExp = Expression.Equal(toLowerExp, constNullExp);
+        //                var equalToEmptyExp = Expression.Equal(Expression.Call(toLowerExp, trimMethodInfo), constEmptyExp);
+        //                var blankExp = Expression.OrElse(equalToNullExp, equalToEmptyExp);
+
+        //                // string.IsNullOrWhiteSpace(x.Property)
+        //                // Performance wise, this method is faster..
+        //                var isNullOrWhiteSpaceExp = Expression.Call(typeof(string), nameof(string.IsNullOrWhiteSpace), null, toLowerExp);
+        //                expressions.Add(isNullOrWhiteSpaceExp);
+        //                break;
+        //            case MethodType.Equal:
+        //                var equalExp = Expression.Equal(toLowerExp, constValueExp);
+        //                expressions.Add(equalExp);
+        //                break;
+        //            case MethodType.NotEqual:
+        //                var notEqualExp = Expression.NotEqual(toLowerExp, constValueExp);
+        //                expressions.Add(notEqualExp);
+        //                break;
+        //            case MethodType.Contains:
+        //                var containsExp = Expression.Call(toLowerExp, containsMethodInfo, constValueExp);
+        //                expressions.Add(containsExp);
+        //                break;
+        //            case MethodType.StartsWith:
+        //                var startsWithExp = Expression.Call(toLowerExp, startsWithMethodInfo, constValueExp);
+        //                expressions.Add(startsWithExp);
+        //                break;
+        //            case MethodType.EndsWith:
+        //                var endsWithExp = Expression.Call(toLowerExp, endsWithMethodInfo, constValueExp);
+        //                expressions.Add(endsWithExp);
+        //                break;
+        //            default:
+        //                break;
+        //        }
+        //    }
+
+        //    if (expressions.Count == 0)
+        //    {
+        //        return source;
+        //    }
+
+        //    var resultExp = expressions.Aggregate(Expression.OrElse);
+        //    var lambda = Expression.Lambda(resultExp, false, parameterExp);
+        //    var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
+        //    return source.Provider.CreateQuery<TSource>(whereExpression);
+        //}
+
+        //public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equals)
+        //{
+        //    if (value == null || !Helper.IsNumericValue(value) && condition != ConditionalOperatorType.Empty)
+        //    {
+        //        return source;
+        //    }
+
+        //    Type entityType = typeof(TSource);
+        //    var parameterExp = Expression.Parameter(entityType, "x");
+        //    var expressions = new List<Expression>();
+
+        //    var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+        //    {
+        //        prop1.PropertyType,
+        //        prop1.Name
+        //    });
+
+
+        //    foreach (var property in properties)
+        //    {
+        //        if (!Helper.IsNumericType(property.PropertyType))
+        //        {
+        //            continue;
+        //        }
+
+        //        var propertyExp = Expression.PropertyOrField(parameterExp, property.Name);
+        //        var constValueExp = Expression.Convert(Expression.Constant(Helper.GetMaxValueIfOutOfRange(value, property.PropertyType)), property.PropertyType);
+        //        switch (condition)
+        //        {
+        //            case ConditionalOperatorType.Empty:
+        //                if (Nullable.GetUnderlyingType(property.PropertyType) == null)
+        //                {
+        //                    // Property is not nullable ..
+        //                    continue;
+        //                }
+
+        //                var equalToNullExp = Expression.Equal(propertyExp, Expression.Convert(Expression.Constant(null), property.PropertyType));
+        //                expressions.Add(equalToNullExp);
+        //                break;
+        //            case ConditionalOperatorType.Equals:
+        //                var equalExp = Expression.Equal(propertyExp, constValueExp);
+        //                expressions.Add(equalExp);
+        //                break;
+        //            case ConditionalOperatorType.NotEquals:
+        //                var notEqualExp = Expression.NotEqual(propertyExp, constValueExp);
+        //                expressions.Add(notEqualExp);
+        //                break;
+        //            case ConditionalOperatorType.GreaterThan:
+        //                var greaterExp = Expression.GreaterThan(propertyExp, constValueExp);
+        //                expressions.Add(greaterExp);
+        //                break;
+        //            case ConditionalOperatorType.GreaterThanOrEqual:
+        //                var greaterOrEqualExp = Expression.GreaterThanOrEqual(propertyExp, constValueExp);
+        //                expressions.Add(greaterOrEqualExp);
+        //                break;
+        //            case ConditionalOperatorType.LessThan:
+        //                var lessExp = Expression.LessThan(propertyExp, constValueExp);
+        //                expressions.Add(lessExp);
+        //                break;
+        //            case ConditionalOperatorType.LessThanOrEqual:
+        //                var lessOrEqualExp = Expression.LessThanOrEqual(propertyExp, constValueExp);
+        //                expressions.Add(lessOrEqualExp);
+        //                break;
+        //            default:
+        //                break;
+        //        }
+        //    }
+
+        //    if (expressions.Count == 0)
+        //    {
+        //        return source;
+        //    }
+
+        //    var resultExp = expressions.Aggregate(Expression.OrElse);
+        //    var lambda = Expression.Lambda(resultExp, false, parameterExp);
+        //    var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
+        //    return source.Provider.CreateQuery<TSource>(whereExpression);
+        //}
+
+
+        //IENuerable string
+
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<string> searachableCols, string value, MethodType methodType = MethodType.Equal)
         {
             if (string.IsNullOrEmpty(value) && methodType != MethodType.Empty)
             {
@@ -248,11 +423,13 @@ namespace LINQExtensions.Extensions
             var expressions = new List<Expression>();
 
 
-            var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+            var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2, (prop1, prop2) => new
             {
-                prop1.PropertyType,
-                prop1.Name
+                PropertyType = prop1.PropertyType,
+                Name = prop1.Name,
+                ColName = prop2
             });
+
 
 
             foreach (var property in properties)
@@ -263,7 +440,11 @@ namespace LINQExtensions.Extensions
                 }
 
                 var propertyExp = Expression.PropertyOrField(parameterExp, property.Name);
-                var constValueExp = Expression.Convert(Expression.Constant(value), property.PropertyType);
+                var constValueExp = Expression.Convert(Expression.Constant(value.ToLower()), property.PropertyType);
+
+                var toLowerExp = Expression.Call(propertyExp,
+                    toLowerMethodInfo);
+
                 switch (methodType)
                 {
                     case MethodType.Empty:
@@ -271,33 +452,33 @@ namespace LINQExtensions.Extensions
                         // x.Property == null || x.Property.Trim() == string.Empty
                         var constNullExp = Expression.Convert(Expression.Constant(null), property.PropertyType);
                         var constEmptyExp = Expression.Convert(Expression.Constant(string.Empty), property.PropertyType);
-                        var equalToNullExp = Expression.Equal(propertyExp, constNullExp);
-                        var equalToEmptyExp = Expression.Equal(Expression.Call(propertyExp, trimMethodInfo), constEmptyExp);
+                        var equalToNullExp = Expression.Equal(toLowerExp, constNullExp);
+                        var equalToEmptyExp = Expression.Equal(Expression.Call(toLowerExp, trimMethodInfo), constEmptyExp);
                         var blankExp = Expression.OrElse(equalToNullExp, equalToEmptyExp);
 
                         // string.IsNullOrWhiteSpace(x.Property)
                         // Performance wise, this method is faster..
-                        var isNullOrWhiteSpaceExp = Expression.Call(typeof(string), nameof(string.IsNullOrWhiteSpace), null, propertyExp);
+                        var isNullOrWhiteSpaceExp = Expression.Call(typeof(string), nameof(string.IsNullOrWhiteSpace), null, toLowerExp);
                         expressions.Add(isNullOrWhiteSpaceExp);
                         break;
                     case MethodType.Equal:
-                        var equalExp = Expression.Equal(propertyExp, constValueExp);
+                        var equalExp = Expression.Equal(toLowerExp, constValueExp);
                         expressions.Add(equalExp);
                         break;
                     case MethodType.NotEqual:
-                        var notEqualExp = Expression.NotEqual(propertyExp, constValueExp);
+                        var notEqualExp = Expression.NotEqual(toLowerExp, constValueExp);
                         expressions.Add(notEqualExp);
                         break;
                     case MethodType.Contains:
-                        var containsExp = Expression.Call(propertyExp, containsMethodInfo, constValueExp);
+                        var containsExp = Expression.Call(toLowerExp, containsMethodInfo, constValueExp);
                         expressions.Add(containsExp);
                         break;
                     case MethodType.StartsWith:
-                        var startsWithExp = Expression.Call(propertyExp, startsWithMethodInfo, constValueExp);
+                        var startsWithExp = Expression.Call(toLowerExp, startsWithMethodInfo, constValueExp);
                         expressions.Add(startsWithExp);
                         break;
                     case MethodType.EndsWith:
-                        var endsWithExp = Expression.Call(propertyExp, endsWithMethodInfo, constValueExp);
+                        var endsWithExp = Expression.Call(toLowerExp, endsWithMethodInfo, constValueExp);
                         expressions.Add(endsWithExp);
                         break;
                     default:
@@ -315,8 +496,7 @@ namespace LINQExtensions.Extensions
             var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
             return source.Provider.CreateQuery<TSource>(whereExpression);
         }
-
-        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equals)
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<string> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equals)
         {
             if (value == null || !Helper.IsNumericValue(value) && condition != ConditionalOperatorType.Empty)
             {
@@ -327,10 +507,10 @@ namespace LINQExtensions.Extensions
             var parameterExp = Expression.Parameter(entityType, "x");
             var expressions = new List<Expression>();
 
-            var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+            var properties = entityType.GetProperties().Join(searachableCols, prop1 => prop1.Name, prop2 => prop2, (prop1, prop2) => new
             {
-                prop1.PropertyType,
-                prop1.Name
+                PropertyType = prop1.PropertyType,
+                Name = prop1.Name,
             });
 
 
@@ -394,73 +574,74 @@ namespace LINQExtensions.Extensions
             var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
             return source.Provider.CreateQuery<TSource>(whereExpression);
         }
+        //public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, DtRequestModel inParam)
+        //{
 
-        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, DtRequestModel inParam)
-        {
+        //    if (string.IsNullOrWhiteSpace(inParam.Search.Value) && inParam.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)))
+        //    {
+        //        return source;
+        //    }
 
-            if (string.IsNullOrWhiteSpace(inParam.Search.Value) && inParam.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)))
-            {
-                return source;
-            }
+        //    var searchableCols = inParam.Columns.Where(x => x.Searchable);
 
-            var searchableCols = inParam.Columns.Where(x => x.Searchable).ToList();
-            int searchCount = searchableCols.Count();
+        //    int searchCount = searchableCols.Count();
 
-            var sourceType = typeof(TSource);
+        //    var sourceType = typeof(TSource);
 
-            var properties = sourceType.GetProperties().Join(searchableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
-            {
-                prop1.PropertyType,
-                prop1.Name,
-                prop2.Search.Value
-            }).ToList();
-
-
-            if (searchCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
-            {
-                foreach (var prop in properties)
-                {
-                    if (Helper.IsNumericType(prop.PropertyType))
-                    {
-                        bool valueIsNumeric = decimal.TryParse(prop.Value, out decimal numericValue);
-                        if (valueIsNumeric)
-                        {
-                            source = source.Where(prop.Name, numericValue);
-
-                        }
-                    }
-                    else
-                    {
-                        source = source.Where(prop.Name, prop.Value, MethodType.Contains);
-                    }
-
-                }
-
-            }
+        //    //need to check again
+        //    var properties = sourceType.GetProperties().Join(searchableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+        //    {
+        //        prop1.PropertyType,
+        //        prop1.Name,
+        //        prop2.Search.Value
+        //    });
 
 
-            if (searchCount > 0 && !string.IsNullOrWhiteSpace(inParam.Search.Value))
-            {
+        //    if (searchCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
+        //    {
+        //        foreach (var prop in properties)
+        //        {
+        //            if (Helper.IsNumericType(prop.PropertyType))
+        //            {
+        //                bool valueIsNumeric = decimal.TryParse(prop.Value, out decimal numericValue);
+        //                if (valueIsNumeric)
+        //                {
+        //                    source = source.Where(prop.Name, numericValue);
 
-                foreach (var prop in properties)
-                {
-                    if (Helper.IsNumericType(prop.PropertyType))
-                    {
-                        bool valueIsNumeric = decimal.TryParse(inParam.Search.Value, out decimal numericValue);
-                        if (valueIsNumeric)
-                        {
-                            source = source.Where(searchableCols, numericValue);
-                        }
-                    }
-                    else
-                    {
-                        source = source.Where(searchableCols, inParam.Search.Value, MethodType.Contains);
-                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                source = source.Where(prop.Name, prop.Value);
+        //            }
 
-                };
-            }
-            return source;
-        }
+        //        }
+
+        //    }
+
+
+        //    if (searchCount > 0 && !string.IsNullOrWhiteSpace(inParam.Search.Value))
+        //    {
+
+        //        foreach (var prop in properties)
+        //        {
+        //            if (Helper.IsNumericType(prop.PropertyType))
+        //            {
+        //                bool valueIsNumeric = decimal.TryParse(inParam.Search.Value, out decimal numericValue);
+        //                if (valueIsNumeric)
+        //                {
+        //                    source = source.Where(searchableCols, numericValue);
+        //                }
+        //            }
+        //            else
+        //            {
+        //                source = source.Where(searchableCols, inParam.Search.Value, MethodType.Contains);
+        //            }
+
+        //        };
+        //    }
+        //    return source;
+        //}
 
 
         public static IQueryable<TSource> OrderBy<TSource>(this IQueryable<TSource> source, string key, OrderByType orderBy = OrderByType.Ascending)

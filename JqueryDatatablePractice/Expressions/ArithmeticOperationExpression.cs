@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using LINQExtensions.Constants;
+using Zaman.Library.LINQExtensions.Constants;
 
 namespace LINQExtensions.Expressions;
 

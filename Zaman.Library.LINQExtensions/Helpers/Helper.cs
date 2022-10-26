@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace LINQExtensions.Helpers
+namespace Zaman.Library.LINQExtensions.Helpers
 {
     public static class Helper
     {

@@ -4,6 +4,6 @@ namespace LINQExtensions.Interfaces
 {
     public interface IOrdering
     {
-        IQueryable<T> GetOrderedData<T>(IQueryable<T> query, DtRequestModel dt);
+        IQueryable<T> GetOrderedData<T>(IQueryable<T> query, JQueryDtRequest dt);
     }
 }

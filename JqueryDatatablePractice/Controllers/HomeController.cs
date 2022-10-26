@@ -26,7 +26,7 @@ namespace LINQExtensions.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetUsers([FromForm] DtRequestModel dt)
+        public async Task<IActionResult> GetUsers([FromForm] JQueryDtRequest dt)
         {
             var userQuery = await Task.Run(() => _userService.GetUsers().AsQueryable());
 

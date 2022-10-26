@@ -4,6 +4,6 @@ namespace LINQExtensions.Interfaces
 {
     public interface IFiltering
     {
-        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequestModel dt);
+        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, JQueryDtRequest dt);
     }
 }

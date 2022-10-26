@@ -2,10 +2,12 @@
 using System.Linq;
 using LINQExtensions.Models;
 using LINQExtensions.Interfaces;
-using LINQExtensions.Constants;
+using Zaman.Library.LINQExtensions.Constants;
 using LINQExtensions.Common;
-using LINQExtensions.Extensions;
+using Zaman.Library.LINQExtensions.Extensions;
 using LINQExtensions.Models.ViewModels.JQueryDatatables;
+using System.Security.AccessControl;
+using Zaman.Library.LINQExtensions.Helpers;
 
 namespace LINQExtensions.Services
 {
@@ -16,12 +18,12 @@ namespace LINQExtensions.Services
             return CommonData.GetUsersList();
         }
 
-        public IQueryable<T> GetPaginatedData<T>(IQueryable<T> query, DtRequestModel dt)
+        public IQueryable<T> GetPaginatedData<T>(IQueryable<T> query, JQueryDtRequest dt)
         {
             return query.Skip(dt.Start).Take(dt.Length);
         }
 
-        public IQueryable<T> GetOrderedData<T>(IQueryable<T> query, DtRequestModel dt)
+        public IQueryable<T> GetOrderedData<T>(IQueryable<T> query, JQueryDtRequest dt)
         {
 
             if (dt.Order.Length > 0)
@@ -29,10 +31,76 @@ namespace LINQExtensions.Services
             return query;
         }
 
-        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, DtRequestModel dt)
+        public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, JQueryDtRequest dt)
         {
 
-            return query.Where(dt);
+            if (string.IsNullOrWhiteSpace(dt.Search.Value) && dt.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)))
+            {
+                return query;
+            }
+
+            var searchableCols = dt.Columns.Where(x => x.Searchable);
+
+            int searchableCount = searchableCols.Count();
+
+            var sourceType = typeof(T);
+
+            var properties = sourceType.GetProperties().Join(searchableCols, prop1 => prop1.Name, prop2 => prop2.Name, (prop1, prop2) => new
+            {
+                PropertyType = prop1.PropertyType,
+                Name = prop1.Name,
+                SearchValue = prop2.Search.Value
+            });
+
+
+            if (searchableCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
+            {
+                foreach (var prop in properties)
+                {
+                    if (string.IsNullOrWhiteSpace(prop.SearchValue))
+                    {
+                        continue;
+                    }
+
+                    if (Helper.IsNumericType(prop.PropertyType))
+                    {
+                        bool valueIsNumeric = decimal.TryParse(prop.SearchValue, out decimal numericValue);
+                        if (valueIsNumeric)
+                        {
+                            query = query.Where(prop.Name, numericValue);
+
+                        }
+                    }
+                    else
+                    {
+                        query = query.Where(prop.Name, prop.SearchValue);
+                    }
+
+                }
+
+            }
+
+            if (searchableCount > 0 && !string.IsNullOrWhiteSpace(dt.Search.Value))
+            {
+                var colNames = searchableCols.Select(x => x.Name);
+
+                foreach (var prop in properties)
+                {
+                    if (Helper.IsNumericType(prop.PropertyType))
+                    {
+                        bool valueIsNumeric = decimal.TryParse(dt.Search.Value, out decimal numericValue);
+                        if (valueIsNumeric)
+                        {
+                            query = query.Where(colNames, numericValue);
+                        }
+                    }
+                    else
+                    {
+                        query = query.Where(colNames, dt.Search.Value, MethodType.Contains);
+                    }
+
+                };
+            }
 
             //foreach (var column in dt.Columns)
             //{
@@ -84,7 +152,7 @@ namespace LINQExtensions.Services
             //    query = query.Where(searchableColumns, value, MethodType.Contains);
             //}
 
-            //return query;
+            return query;
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace LINQExtensions.Constants;
+namespace Zaman.Library.LINQExtensions.Constants;
 
 public enum MethodType
 {
