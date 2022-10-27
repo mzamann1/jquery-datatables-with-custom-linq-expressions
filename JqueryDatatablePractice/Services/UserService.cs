@@ -34,7 +34,7 @@ namespace LINQExtensions.Services
         public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, JQueryDtRequest dt)
         {
 
-            if (string.IsNullOrWhiteSpace(dt.Search.Value) && dt.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)))
+            if (string.IsNullOrWhiteSpace(dt.Search.Value) && dt.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)) && dt.searchBuilder == null)
             {
                 return query;
             }
@@ -53,54 +53,63 @@ namespace LINQExtensions.Services
             });
 
 
-            if (searchableCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
+            if (dt.searchBuilder != null)
             {
-                foreach (var prop in properties)
+                foreach (var item in dt.SearchBuilder.Criteria)
                 {
-                    if (string.IsNullOrWhiteSpace(prop.SearchValue))
-                    {
-                        continue;
-                    }
-
-                    if (Helper.IsNumericType(prop.PropertyType))
-                    {
-                        bool valueIsNumeric = decimal.TryParse(prop.SearchValue, out decimal numericValue);
-                        if (valueIsNumeric)
-                        {
-                            query = query.Where(prop.Name, numericValue);
-
-                        }
-                    }
-                    else
-                    {
-                        query = query.Where(prop.Name, prop.SearchValue);
-                    }
-
+                    query = query.Where(item.Data, item.Value[0], (MethodType)Enum.Parse(typeof(MethodType), item.Condition));
                 }
-
             }
 
-            if (searchableCount > 0 && !string.IsNullOrWhiteSpace(dt.Search.Value))
-            {
-                var colNames = searchableCols.Select(x => x.Name);
 
-                foreach (var prop in properties)
-                {
-                    if (Helper.IsNumericType(prop.PropertyType))
-                    {
-                        bool valueIsNumeric = decimal.TryParse(dt.Search.Value, out decimal numericValue);
-                        if (valueIsNumeric)
-                        {
-                            query = query.Where(colNames, numericValue);
-                        }
-                    }
-                    else
-                    {
-                        query = query.Where(colNames, dt.Search.Value, MethodType.Contains);
-                    }
+            //if (searchableCount > 0 && searchableCols.Any(x => !string.IsNullOrWhiteSpace(x.Search.Value)))
+            //{
+            //    foreach (var prop in properties)
+            //    {
+            //        if (string.IsNullOrWhiteSpace(prop.SearchValue))
+            //        {
+            //            continue;
+            //        }
 
-                };
-            }
+            //        if (Helper.IsNumericType(prop.PropertyType))
+            //        {
+            //            bool valueIsNumeric = decimal.TryParse(prop.SearchValue, out decimal numericValue);
+            //            if (valueIsNumeric)
+            //            {
+            //                query = query.Where(prop.Name, numericValue);
+
+            //            }
+            //        }
+            //        else
+            //        {
+            //            query = query.Where(prop.Name, prop.SearchValue);
+            //        }
+
+            //    }
+
+            //}
+
+            //if (searchableCount > 0 && !string.IsNullOrWhiteSpace(dt.Search.Value))
+            //{
+            //    var colNames = searchableCols.Select(x => x.Name);
+
+            //    foreach (var prop in properties)
+            //    {
+            //        if (Helper.IsNumericType(prop.PropertyType))
+            //        {
+            //            bool valueIsNumeric = decimal.TryParse(dt.Search.Value, out decimal numericValue);
+            //            if (valueIsNumeric)
+            //            {
+            //                query = query.Where(colNames, numericValue);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            query = query.Where(colNames, dt.Search.Value, MethodType.Contains);
+            //        }
+
+            //    };
+            //}
 
             //foreach (var column in dt.Columns)
             //{
