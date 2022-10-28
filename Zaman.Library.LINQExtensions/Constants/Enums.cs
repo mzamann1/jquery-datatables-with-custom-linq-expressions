@@ -4,8 +4,11 @@ public enum MethodType
 {
     Empty = 0,
     StartsWith,
+    DoesNotStartsWith,
+    DoesNotEndsWith,
     EndsWith,
     Contains,
+    DoesNotContains,
     Equal,
     NotEqual
 }
@@ -23,12 +26,14 @@ public enum ArithmeticOperationType
 public enum ConditionalOperatorType
 {
     Empty,
-    Equals,
-    NotEquals,
+    Equal,
+    NotEqual,
     GreaterThan,
     GreaterThanOrEqual,
     LessThan,
     LessThanOrEqual,
+    Between,
+    NotBetween
 }
 
 public enum OrderByType

@@ -113,11 +113,19 @@ public class JQuerySearchBuilderCriteria
         {
             "=" => "Equal",
             "!=" => "NotEqual",
+            ">" => "GreaterThan",
+            ">=" => "GreaterThanOrEqual",
+            "<" => "LessThan",
+            "<=" => "LessThanOrEqual",
             "contains" => "Contains",
-            "!contains" => "NotContain",
+            "!contains" => "DoesNotContains",
             "starts" => "StartsWith",
+            "!starts" => "DoesNotStartsWith",
             "ends" => "EndsWith",
-            _ => throw new ArgumentException("arguments not allowed")
+            "!ends" => "DoesNotEndsWith",
+            "between" => "Between",
+            "!between" => "NotBetween",
+            _ => throw new ArgumentException("Arguments not allowed")
         };
     }
 }

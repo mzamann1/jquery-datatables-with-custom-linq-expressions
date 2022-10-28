@@ -8,6 +8,8 @@ using Zaman.Library.LINQExtensions.Extensions;
 using LINQExtensions.Models.ViewModels.JQueryDatatables;
 using System.Security.AccessControl;
 using Zaman.Library.LINQExtensions.Helpers;
+using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace LINQExtensions.Services
 {
@@ -34,7 +36,7 @@ namespace LINQExtensions.Services
         public IQueryable<T> GetFilteredData<T>(IQueryable<T> query, JQueryDtRequest dt)
         {
 
-            if (string.IsNullOrWhiteSpace(dt.Search.Value) && dt.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)) && dt.searchBuilder == null)
+            if (string.IsNullOrWhiteSpace(dt.Search.Value) && dt.Columns.All(x => string.IsNullOrWhiteSpace(x.Search.Value)) && dt.SearchBuilder == null)
             {
                 return query;
             }
@@ -53,11 +55,62 @@ namespace LINQExtensions.Services
             });
 
 
-            if (dt.searchBuilder != null)
+            if (dt.SearchBuilder != null)
             {
                 foreach (var item in dt.SearchBuilder.Criteria)
                 {
-                    query = query.Where(item.Data, item.Value[0], (MethodType)Enum.Parse(typeof(MethodType), item.Condition));
+                    if (item.Type == "string")
+                    {
+                        query = query.Where(item.Data, item.Value[0], (MethodType)Enum.Parse(typeof(MethodType), item.Condition));
+                    }
+                    else if (item.Type == "num")
+                    {
+                        var condition = (ConditionalOperatorType)Enum.Parse(typeof(ConditionalOperatorType), item.Condition);
+
+                        bool isFirstNumeric = decimal.TryParse(item.Value1 ?? "", out decimal numericValue); //value from first input box
+
+                        if (condition == ConditionalOperatorType.Between || condition == ConditionalOperatorType.NotBetween)
+                        {
+                            //value from second input box
+                            bool isSecondNumeric = decimal.TryParse(item.Value2 ?? "", out decimal secondNumeric);
+
+                            /*
+                             * if both inputs are empty
+                             */
+
+                            if (!isFirstNumeric && !isSecondNumeric)
+                            {
+                                continue;
+                            }
+
+                            /*
+                             *
+                             * If only first inout is provided (From - To) => from range
+                             *
+                             * weird logic behind is if user types in first(from) input and second one is empty, then first input value  being stored in 2nd element of the array which is value2
+                             *
+                             */
+
+                            if (!isFirstNumeric && isSecondNumeric)
+                            {
+                                query = query.Where(item.Data, secondNumeric, condition == ConditionalOperatorType.Between ? ConditionalOperatorType.GreaterThan : ConditionalOperatorType.LessThan);
+                            }
+                            else
+                            {
+                                query = query.Where(item.Data, isFirstNumeric ? numericValue : null, isSecondNumeric ? secondNumeric : null, condition);
+                            }
+                        }
+                        else
+                        {
+                            if (string.IsNullOrWhiteSpace(item.Value1))
+                            {
+                                continue;
+                            }
+
+                            query = query.Where(item.Data, numericValue, item.Value2, condition);
+
+                        }
+                    }
                 }
             }
 

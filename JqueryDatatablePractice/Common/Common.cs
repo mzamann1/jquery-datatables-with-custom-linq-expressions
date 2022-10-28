@@ -18,6 +18,7 @@ namespace LINQExtensions.Common
                     Country = i % 2 == 0 ? "PK" : "US",
                     Email = $"{i + 1}@example.com",
                     Status = i % 2 == 0 ? "Active" : "In-Active",
+                    Balance = 100 + i
 
                 });
             }

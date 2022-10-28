@@ -21,5 +21,8 @@ public class User
 
     [JsonPropertyName("status")]
     public string Status { get; set; }
+
+    [JsonPropertyName("balance")]
+    public decimal Balance { get; set; }
 }
 

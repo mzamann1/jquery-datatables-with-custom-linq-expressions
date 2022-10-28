@@ -95,6 +95,16 @@ namespace Zaman.Library.LINQExtensions.Extensions
                     finalExp = Expression.Call(toLowerExp, startsWithInfo, convertedConstvalue);
                     break;
 
+                case MethodType.DoesNotStartsWith:
+
+                    /*
+                        * Getting StartsWith Method from string class using reflection
+                    */
+
+                    var doesNotStartsWithInfo = typeof(string).GetMethod(nameof(string.StartsWith), new Type[] { typeof(string) });
+                    finalExp = Expression.Not(Expression.Call(toLowerExp, doesNotStartsWithInfo, convertedConstvalue));
+                    break;
+
                 case MethodType.EndsWith:
 
                     /*
@@ -105,6 +115,17 @@ namespace Zaman.Library.LINQExtensions.Extensions
                     finalExp = Expression.Call(toLowerExp, endsWithInfo, convertedConstvalue);
                     break;
 
+
+                case MethodType.DoesNotEndsWith:
+
+                    /*
+                         * Getting EndsWith Method from string class using reflection
+                    */
+
+                    var doesNotEndsWithInfo = typeof(string).GetMethod(nameof(string.EndsWith), new Type[] { typeof(string) });
+                    finalExp = Expression.Not(Expression.Call(toLowerExp, doesNotEndsWithInfo, convertedConstvalue));
+                    break;
+
                 case MethodType.Contains:
 
                     /*
@@ -113,6 +134,17 @@ namespace Zaman.Library.LINQExtensions.Extensions
 
                     var containsInfo = typeof(string).GetMethod(nameof(string.Contains), new Type[] { typeof(string) });
                     finalExp = Expression.Call(toLowerExp, containsInfo, convertedConstvalue);
+                    break;
+
+
+                case MethodType.DoesNotContains:
+
+                    /*
+                         * Getting EndsWith Method from string class using reflection
+                    */
+
+                    var doesNotContainsInfo = typeof(string).GetMethod(nameof(string.Contains), new Type[] { typeof(string) });
+                    finalExp = Expression.Not(Expression.Call(toLowerExp, doesNotContainsInfo, convertedConstvalue));
                     break;
 
                 case MethodType.Equal:
@@ -126,6 +158,141 @@ namespace Zaman.Library.LINQExtensions.Extensions
                     break;
 
                 default:
+                    return source;
+            }
+
+            var lambda = Expression.Lambda(finalExp, false, parameterExp);
+            var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { sourceType }, source.Expression, lambda);
+
+            return source.Provider.CreateQuery<TSource>(whereExpression);
+        }
+
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, string key, object value, object value2 = null, ConditionalOperatorType operatorType = ConditionalOperatorType.Empty)
+        {
+            /*
+            *   Check if Key is null or empty space, or
+            *   if someone has provided only the key 
+            */
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return source;
+            }
+
+            /*
+            * Checking the type of TSource Object , for further processing
+            */
+
+            Type sourceType = typeof(TSource);
+
+            /*
+            * Creating Parameter Expression  t = >  , parameter  t will be of type TSource
+            */
+
+            var parameterExp = Expression.Parameter(sourceType, "t");
+
+            /*
+            * Getting Type of the Key tName
+            */
+
+            var propertyType = Helper.GetPropertyType(sourceType, key);
+
+            /*
+            * Now we need to create expression for that property
+            */
+
+            var memberExp = sourceType.GetProperty(key) == null ? default : Expression.Property(parameterExp, key);
+
+            /*
+            * Now we need to convert the provided value's datatype to the property type from which it is going to be matched.
+            */
+
+            UnaryExpression? convertedFisrtValue = null;
+
+            if (operatorType == ConditionalOperatorType.Between || operatorType == ConditionalOperatorType.NotBetween)
+            {
+                if (!Helper.IsNumericType(memberExp.Type) || (!Helper.IsNumericValue(value) && !Helper.IsNumericValue(value2)))
+                {
+                    return source;
+                }
+            }
+            else
+            {
+                if (!Helper.IsNumericType(memberExp.Type) || !Helper.IsNumericValue(value))
+                {
+                    return source;
+                }
+
+                convertedFisrtValue = Expression.Convert(Expression.Constant(value), propertyType);
+            }
+
+            Expression? finalExp = default;
+
+            switch (operatorType)
+            {
+
+                case ConditionalOperatorType.Empty:
+                    return source;
+
+                case ConditionalOperatorType.Equal:
+
+                    finalExp = Expression.Equal(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.NotEqual:
+
+                    finalExp = Expression.NotEqual(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.GreaterThan:
+
+                    finalExp = Expression.GreaterThan(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.GreaterThanOrEqual:
+
+                    finalExp = Expression.GreaterThanOrEqual(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.LessThan:
+
+                    finalExp = Expression.LessThan(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.LessThanOrEqual:
+
+                    finalExp = Expression.LessThanOrEqual(memberExp, convertedFisrtValue);
+                    break;
+
+                case ConditionalOperatorType.Between:
+
+                    if (value != null && value2 == null)
+                    {
+                        finalExp = Expression.GreaterThan(memberExp, Expression.Convert(Expression.Constant(value), propertyType));
+                        break;
+                    }
+                    else if (value2 != null && value == null)
+                    {
+                        finalExp = Expression.LessThan(memberExp,
+                            Expression.Convert(Expression.Constant(value2), propertyType));
+                        break;
+                    }
+                    else if (value2 is not null && value is not null)
+                    {
+                        finalExp = Expression.And(Expression.GreaterThan(memberExp, Expression.Convert(Expression.Constant(value), propertyType)), Expression.LessThan(memberExp, Expression.Convert(Expression.Constant(value2), propertyType)));
+                        break;
+                    }
+                    else
+                    {
+                        return source;
+                    }
+
+                case ConditionalOperatorType.NotBetween:
+
+                    finalExp = Expression.Not(Expression.And(Expression.GreaterThan(memberExp, Expression.Convert(Expression.Constant(value2), propertyType)), Expression.LessThan(memberExp, convertedFisrtValue)));
+                    break;
+
+                default:
                     break;
             }
 
@@ -135,7 +302,7 @@ namespace Zaman.Library.LINQExtensions.Extensions
             return source.Provider.CreateQuery<TSource>(whereExpression);
         }
 
-        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, string key, object value, ConditionalOperatorType operatorType = ConditionalOperatorType.Empty)
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, string key, object value1, object value2, bool negate)
         {
             /*
             *   Check if Key is null or empty space, or
@@ -176,61 +343,31 @@ namespace Zaman.Library.LINQExtensions.Extensions
             */
 
 
-            if (!Helper.IsNumericType(memberExp.Type) || !Helper.IsNumericValue(value))
+            if (!Helper.IsNumericType(memberExp.Type) || !Helper.IsNumericValue(value1) || !Helper.IsNumericValue(value2))
             {
                 return source;
             }
 
-            var convertedConstvalue = Expression.Convert(Expression.Constant(value), propertyType);
+            var convertedFirstvalue = Expression.Convert(Expression.Constant(value1), propertyType);
+            var convertedSecondValue = Expression.Convert(Expression.Constant(value2), propertyType);
 
             Expression finalExp = default;
 
-            switch (operatorType)
+            if (negate)
             {
-
-                case ConditionalOperatorType.Empty:
-                    return source;
-
-                case ConditionalOperatorType.Equals:
-
-                    finalExp = Expression.Equal(memberExp, convertedConstvalue);
-                    break;
-
-                case ConditionalOperatorType.NotEquals:
-
-                    finalExp = Expression.NotEqual(memberExp, convertedConstvalue);
-                    break;
-
-                case ConditionalOperatorType.GreaterThan:
-
-                    finalExp = Expression.GreaterThan(memberExp, convertedConstvalue);
-                    break;
-
-                case ConditionalOperatorType.GreaterThanOrEqual:
-
-                    finalExp = Expression.GreaterThanOrEqual(memberExp, convertedConstvalue);
-                    break;
-
-                case ConditionalOperatorType.LessThan:
-
-                    finalExp = Expression.LessThan(memberExp, convertedConstvalue);
-                    break;
-
-                case ConditionalOperatorType.LessThanOrEqual:
-
-                    finalExp = Expression.LessThanOrEqual(memberExp, convertedConstvalue);
-                    break;
-
-                default:
-                    break;
+                finalExp = Expression.Not(Expression.And(Expression.GreaterThan(memberExp, convertedFirstvalue), Expression.LessThan(memberExp, convertedSecondValue)));
             }
+            else
+            {
+                finalExp = Expression.And(Expression.GreaterThan(memberExp, convertedFirstvalue), Expression.LessThan(memberExp, convertedSecondValue));
+            }
+
 
             var lambda = Expression.Lambda(finalExp, false, parameterExp);
             var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { sourceType }, source.Expression, lambda);
 
             return source.Provider.CreateQuery<TSource>(whereExpression);
         }
-
 
         //public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<DtColumn> searachableCols, string value, MethodType methodType = MethodType.Equal)
         //{
@@ -496,7 +633,7 @@ namespace Zaman.Library.LINQExtensions.Extensions
             var whereExpression = Expression.Call(typeof(Queryable), "Where", new[] { entityType }, source.Expression, lambda);
             return source.Provider.CreateQuery<TSource>(whereExpression);
         }
-        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<string> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equals)
+        public static IQueryable<TSource> Where<TSource>(this IQueryable<TSource> source, IEnumerable<string> searachableCols, object value, ConditionalOperatorType condition = ConditionalOperatorType.Equal)
         {
             if (value == null || !Helper.IsNumericValue(value) && condition != ConditionalOperatorType.Empty)
             {
@@ -535,11 +672,11 @@ namespace Zaman.Library.LINQExtensions.Extensions
                         var equalToNullExp = Expression.Equal(propertyExp, Expression.Convert(Expression.Constant(null), property.PropertyType));
                         expressions.Add(equalToNullExp);
                         break;
-                    case ConditionalOperatorType.Equals:
+                    case ConditionalOperatorType.Equal:
                         var equalExp = Expression.Equal(propertyExp, constValueExp);
                         expressions.Add(equalExp);
                         break;
-                    case ConditionalOperatorType.NotEquals:
+                    case ConditionalOperatorType.NotEqual:
                         var notEqualExp = Expression.NotEqual(propertyExp, constValueExp);
                         expressions.Add(notEqualExp);
                         break;
